@@ -9,8 +9,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      ANDROID_USER_HOME: /tmp/android-home
-      ANDROID_SDK_HOME: /tmp/android-home
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
     steps:
       - uses: actions/checkout@v4
 
@@ -19,26 +19,14 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.7
-
       - name: Accept Android licenses and install SDK packages
         run: |
           yes | sudo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
           sudo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
-      - name: Create debug keystore
-        run: |
-          mkdir -p /tmp/android-home
-          keytool -genkeypair -v -keystore /tmp/android-home/debug.keystore \
-            -storepass android -keypass android -alias androiddebugkey \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
-
       - name: Build debug APK
         run: |
-          gradle wrapper --gradle-version 8.7
+          sudo chown -R "$USER" "$HOME" || true
           chmod +x ./gradlew
           ./gradlew assembleDebug --stacktrace
 
