@@ -24,9 +24,14 @@ jobs:
           yes | sudo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
           sudo "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
+      - name: Install Gradle and generate wrapper
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+
       - name: Build debug APK
         run: |
-          sudo chown -R "$USER" "$HOME" || true
+          gradle wrapper --gradle-version 8.7
           chmod +x ./gradlew
           ./gradlew assembleDebug --stacktrace
 
