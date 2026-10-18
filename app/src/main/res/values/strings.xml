@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Noir Clicker</string>
+    <string name="accessibility_service_description">Lets Noir Clicker tap and fill text at a point you choose, in whatever app is on screen.</string>
+</resources>

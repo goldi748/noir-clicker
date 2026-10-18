@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noir Clicker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#0b0a08; --card:#161409; --ink:#f3ecd9; --sub:#a79c82; --gold:#d4af37; --gold-bright:#f1cd63; --line:rgba(212,175,55,.18); }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;padding:24px 18px 40px;}
+  .wrap{max-width:460px;margin:0 auto;}
+  h1{font-family:'Playfair Display',serif;font-size:28px;margin:0 0 4px;text-align:center;}
+  .tag{text-align:center;color:var(--sub);font-size:13px;margin-bottom:20px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px;}
+  .perm-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:13px;}
+  .perm-row:last-child{margin-bottom:0;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:8px;background:#9c3b3b;}
+  .dot.on{background:#4caf6e;}
+  .mini-btn{background:transparent;border:1px solid var(--gold);color:var(--gold-bright);padding:7px 12px;border-radius:10px;font-size:12px;cursor:pointer;}
+  .tabs{display:flex;gap:8px;margin-bottom:14px;}
+  .tab{flex:1;padding:11px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--sub);font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;text-align:center;cursor:pointer;}
+  .tab.active{background:var(--gold);color:#1a1406;border-color:var(--gold);}
+  .panel{display:none;} .panel.active{display:block;}
+  label{font-size:13px;color:var(--sub);}
+  .row{display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px;}
+  .val{font-family:'Playfair Display',serif;color:var(--gold-bright);font-weight:700;}
+  input[type=range]{width:100%;accent-color:var(--gold);}
+  input[type=text]{width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:#121109;color:var(--ink);font-family:inherit;font-size:14px;margin-top:6px;}
+  .loop-row{display:flex;align-items:center;gap:8px;margin:12px 0;font-size:13px;color:var(--sub);}
+  .big-btn{width:100%;padding:15px;border-radius:14px;border:none;background:var(--gold);color:#1a1406;font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;margin-top:6px;}
+  .big-btn.stop{background:#9c3b3b;color:#fff;}
+  .hint{text-align:center;color:var(--sub);font-size:12px;margin-top:14px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Noir Clicker</h1>
+  <div class="tag">Floating control for any app</div>
+
+  <div class="card">
+    <div class="perm-row">
+      <span><span class="dot" id="dotAccess"></span>Accessibility service</span>
+      <button class="mini-btn" onclick="Android.openAccessibilitySettings()">Enable</button>
+    </div>
+    <div class="perm-row">
+      <span><span class="dot" id="dotOverlay"></span>Draw over other apps</span>
+      <button class="mini-btn" onclick="Android.requestOverlayPermission()">Enable</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-mode="single">Single Clicker</div>
+    <div class="tab" data-mode="multi">Multi Clicker</div>
+  </div>
+
+  <div class="panel active" id="panel-single">
+    <div class="card">
+      <div class="row"><label>Clicks per second</label><span class="val"><span id="cpsValue">20</span> CPS</span></div>
+      <input type="range" id="cpsSlider" min="1" max="100" value="20">
+      <p class="hint" style="margin-top:12px;">After you tap Start below, a gold dot appears on screen — drag it to the exact spot you want tapped (center or anywhere), then tap the pill button to begin.</p>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-multi">
+    <div class="card">
+      <label>What should it type?</label>
+      <input type="text" id="typerInput" placeholder="e.g. hello, hi, gg...">
+      <div class="row"><label>Typing speed</label><span class="val"><span id="speedValue">30</span> CPS</span></div>
+      <input type="range" id="typerSpeed" min="1" max="100" value="30">
+      <div class="loop-row"><input type="checkbox" id="loopCheckbox" checked><label>Loop forever</label></div>
+      <p class="hint" style="margin:0;">Open the target app, tap into its text field, then start — it fills that field. It does not press Send for you.</p>
+    </div>
+  </div>
+
+  <button class="big-btn" id="startBtn">Start Floating Control</button>
+  <div class="hint">Tip: fully close this screen (don't force-stop the app) and the floating controls stay active until you tap Stop.</div>
+</div>
+
+<script>
+  let mode = 'single';
+  let overlayRunning = false;
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(t => t.addEventListener('click', () => {
+    mode = t.dataset.mode;
+    tabs.forEach(x => x.classList.toggle('active', x === t));
+    document.getElementById('panel-single').classList.toggle('active', mode === 'single');
+    document.getElementById('panel-multi').classList.toggle('active', mode === 'multi');
+  }));
+
+  document.getElementById('cpsSlider').addEventListener('input', e => {
+    document.getElementById('cpsValue').textContent = e.target.value;
+  });
+  document.getElementById('typerSpeed').addEventListener('input', e => {
+    document.getElementById('speedValue').textContent = e.target.value;
+  });
+
+  const startBtn = document.getElementById('startBtn');
+  startBtn.addEventListener('click', () => {
+    if (!overlayRunning) {
+      const cps = mode === 'single'
+        ? parseInt(document.getElementById('cpsSlider').value, 10)
+        : parseInt(document.getElementById('typerSpeed').value, 10);
+      const text = document.getElementById('typerInput').value;
+      const loop = document.getElementById('loopCheckbox').checked;
+      Android.startOverlay(mode, cps, text, loop);
+      overlayRunning = true;
+      startBtn.textContent = 'Stop Floating Control';
+      startBtn.classList.add('stop');
+    } else {
+      Android.stopOverlay();
+      overlayRunning = false;
+      startBtn.textContent = 'Start Floating Control';
+      startBtn.classList.remove('stop');
+    }
+  });
+
+  function refreshPermissionDots(){
+    document.getElementById('dotAccess').classList.toggle('on', Android.isAccessibilityEnabled());
+    document.getElementById('dotOverlay').classList.toggle('on', Android.hasOverlayPermission());
+  }
+  window.onPermissionsMaybeChanged = refreshPermissionDots;
+  refreshPermissionDots();
+</script>
+</body>
+</html>
